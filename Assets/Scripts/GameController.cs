@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
+using GoogleMobileAds.Api;
 
 public class GameController : MonoBehaviour
 {
   public Camera cam;
+    public Text bestScoreText,gameOverBestScoreText,inGameBestScoreText,scoreText;
   // Start is called before the first frame update
   private float maxWidth;
   public GameObject[] eggs;
@@ -18,10 +20,108 @@ public class GameController : MonoBehaviour
   public Sprite newEgg;
   public Sprite noEgg;
   public int life;
+    public float minCreateTime;
+    public float maxCreateTime;
   private bool playing;
-  void Start()
+    public Sprite closedButton,openButton;
+    public Button musicButton, soundButton;
+    public Button inMusicButton, inSoundButton;
+    public AudioSource buttonClickSound, gameOverSound,chickenSound;
+    public static int music, sound;
+
+    public string appID = "ca-app-pub-2149079899242374~9135145379";
+    public string bannerID = "ca-app-pub-3940256099942544/6300978111";
+    public string interstitialID = "ca-app-pub-3940256099942544/1033173712";
+    private BannerView bannerADS;
+    private InterstitialAd InterstitialADS;
+
+    private bool internetConnection = false;
+
+    private void Update()
+    {
+
+    }
+
+    
+
+    void AdsGet()
+    {
+        bannerADS = new BannerView(appID, AdSize.Banner, AdPosition.Top);
+        AdRequest request = new AdRequest.Builder().Build();
+        bannerADS.LoadAd(request);
+
+
+        InterstitialADS = new InterstitialAd(appID);
+        AdRequest requestInter = new AdRequest.Builder().Build();
+        InterstitialADS.LoadAd(requestInter);
+    }
+    void bannerShow()
+    {
+        if (internetConnection)
+        {
+            bannerADS.Show();
+        }
+    }
+
+    public void InterstitialShow()
+    {
+        if (InterstitialADS.IsLoaded())
+        {
+            InterstitialADS.Show();
+        }
+    }
+
+    void Start()
   {
-    if (cam == null)
+        MobileAds.Initialize(initStatus => { });
+        AdsGet();
+
+        if (!PlayerPrefs.HasKey("BestScore"))
+        {
+            PlayerPrefs.SetInt("BestScore", 0);
+        }
+
+        if (!PlayerPrefs.HasKey("music"))
+        {
+            PlayerPrefs.SetInt("music", 1);
+        }
+        if (!PlayerPrefs.HasKey("sound"))
+        {
+            PlayerPrefs.SetInt("sound", 1);
+        }
+
+
+
+        music = PlayerPrefs.GetInt("music");
+        sound = PlayerPrefs.GetInt("sound");
+
+
+        if (music == 1)
+        {
+            musicButton.GetComponent<Image>().sprite = openButton;
+            inMusicButton.GetComponent<Image>().sprite = openButton;
+        }
+        else
+        {
+            musicButton.GetComponent<Image>().sprite = closedButton;
+            inMusicButton.GetComponent<Image>().sprite = closedButton;
+
+        }
+        if (sound == 1)
+        {
+            soundButton.GetComponent<Image>().sprite = openButton;
+            inSoundButton.GetComponent<Image>().sprite = openButton;
+        }
+        else
+        {
+            soundButton.GetComponent<Image>().sprite = closedButton;
+            inSoundButton.GetComponent<Image>().sprite = closedButton;
+
+        }
+
+        bestScoreText.text = PlayerPrefs.GetInt("BestScore").ToString();
+        inGameBestScoreText.text = PlayerPrefs.GetInt("BestScore").ToString();
+        if (cam == null)
     {
       cam = Camera.main;
     }
@@ -33,22 +133,28 @@ public class GameController : MonoBehaviour
   }
   void FixedUpdate()
   {
-    if (playing)
-    {
-      timeleft -= Time.deltaTime;
-      if (timeleft < 0)
-      {
-        timeleft = 0;
-      }
-    }
+        if(Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            internetConnection = false;
+        }
+        else
+        {
+            internetConnection = true;
+        }
+
   }
 
   public void StartGame()
   {
+    bannerShow();
     StartCanvas.SetActive(false);
     GameCanvas.SetActive(true);
     Basket.SetActive(true);
     playing = true;
+        if(sound == 1)
+        {
+            buttonClickSound.Play();
+        }
     StartCoroutine(Spawn());
 
   }
@@ -62,17 +168,18 @@ public class GameController : MonoBehaviour
       Vector3 spawnPosition = new Vector3(Random.Range(-maxWidth, maxWidth), transform.position.y, 0.0f);
       Quaternion spawnRotation = Quaternion.identity;
       Instantiate(egg, spawnPosition, spawnRotation);
-      yield return new WaitForSeconds(Random.Range(1.0f, 2.0f));
+      yield return new WaitForSeconds(Random.Range(minCreateTime, maxCreateTime));
     }
 
   }
+  
 
   public void UpLife()
   {
-    if (life > 3)
+        Debug.Log(life.ToString());
+    if (life == 3)
     {
-      Debug.Log("giriyor");
-      life = 3;
+            return;
     }
     else
     {
@@ -94,6 +201,7 @@ public class GameController : MonoBehaviour
       //     break;
       // }
     }
+
   }
   public void LossLife()
   {
@@ -125,12 +233,74 @@ public class GameController : MonoBehaviour
   }
   public void GameOver()
   {
+        if (sound == 1)
+        {
+            gameOverSound.Play();
+        }
+        if(int.Parse(scoreText.text) > PlayerPrefs.GetInt("BestScore"))
+        {
+            PlayerPrefs.SetInt("BestScore", int.Parse(scoreText.text));
+        }
     playing = false;
     StopCoroutine(Spawn());
     Basket.SetActive(false);
     GameCanvas.SetActive(false);
     GameOverCanvas.SetActive(true);
+        gameOverBestScoreText.text = PlayerPrefs.GetInt("BestScore").ToString();
+
+       
+        if (internetConnection)
+        {
+
+            InterstitialShow();
+        }
   }
+
+    public void MusicChange()
+    {
+        if (musicButton.GetComponent<Image>().sprite == closedButton)
+        {
+            musicButton.GetComponent<Image>().sprite = openButton;
+            inMusicButton.GetComponent<Image>().sprite = openButton;
+            PlayerPrefs.SetInt("music", 1);
+        }
+        else
+        {
+            musicButton.GetComponent<Image>().sprite = closedButton;
+            inMusicButton.GetComponent<Image>().sprite = closedButton;
+            PlayerPrefs.SetInt("music", 0);
+        }
+
+        music = PlayerPrefs.GetInt("music");
+
+    }
+    public void SoundChange()
+    {
+        if (soundButton.GetComponent<Image>().sprite == closedButton)
+        {
+            soundButton.GetComponent<Image>().sprite = openButton;
+            inSoundButton.GetComponent<Image>().sprite = openButton;
+            PlayerPrefs.SetInt("sound", 1);
+        }
+        else
+        {
+            soundButton.GetComponent<Image>().sprite = closedButton;
+            inSoundButton.GetComponent<Image>().sprite = closedButton;
+            PlayerPrefs.SetInt("sound", 0);
+        }
+
+        sound = PlayerPrefs.GetInt("sound");
+    }
+    public IEnumerator chickSound()
+    {
+        yield return new WaitForSeconds(0.2f);
+        if(sound == 1)
+        {
+
+            chickenSound.Play();
+        }
+
+    }
 }
 
 

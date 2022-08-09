@@ -11,6 +11,7 @@ public class BasketController : MonoBehaviour
   private float maxWidth;
   void Start()
   {
+
     rb = GetComponent<Rigidbody2D>();
     Vector3 upperCorner = new Vector3(Screen.width,Screen.height,0.0f);
     Vector3 targetWidth = cam.ScreenToWorldPoint(upperCorner);

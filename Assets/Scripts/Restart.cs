@@ -5,5 +5,15 @@ using UnityEngine.SceneManagement;
 
 public class Restart : MonoBehaviour
 {
-  public void RestartGame() => SceneManager.LoadScene("Main");
+    public AudioSource buttonClickSound;
+
+    public void RestartGame()
+    {
+        if(GameController.sound == 1)
+        {
+            buttonClickSound.Play();
+        }
+        
+        SceneManager.LoadScene("Main");
+    }
 }

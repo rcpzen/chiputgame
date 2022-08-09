@@ -15,6 +15,7 @@ public class Explode : MonoBehaviour
     }
 
     public void ActiveExplode(){
+        
         var Ex = Instantiate(Explosion,transform.position,transform.rotation);
             foreach (var effect in Effects)
             {
