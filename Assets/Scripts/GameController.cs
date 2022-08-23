@@ -29,12 +29,12 @@ public class GameController : MonoBehaviour
     public AudioSource buttonClickSound, gameOverSound,chickenSound;
     public static int music, sound;
 
-    public string appID = "ca-app-pub-2149079899242374~9135145379";
-    public string bannerID = "ca-app-pub-3940256099942544/6300978111";
-    public string interstitialID = "ca-app-pub-3940256099942544/1033173712";
+    public string appID = "ca-app-pub-3789690953881934~7586025873";
+    public string bannerID = "ca-app-pub-3789690953881934/2333699192";
+    public string interstitialID = "ca-app-pub-3789690953881934/7156696758";
     private BannerView bannerADS;
     private InterstitialAd InterstitialADS;
-
+    static int adsCount = 1;
     private bool internetConnection = false;
 
     private void Update()
@@ -248,8 +248,8 @@ public class GameController : MonoBehaviour
     GameOverCanvas.SetActive(true);
         gameOverBestScoreText.text = PlayerPrefs.GetInt("BestScore").ToString();
 
-       
-        if (internetConnection)
+        adsCount++;
+        if (internetConnection && adsCount%5==0)
         {
 
             InterstitialShow();
